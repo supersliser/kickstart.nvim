@@ -350,6 +350,398 @@ require('lazy').setup({
       },
     },
   },
+  {
+    'koenverburg/peepsight.nvim',
+    config = function()
+      require('peepsight').setup {
+        -- go
+        'function_declaration',
+        'method_declaration',
+        'func_literal',
+
+        -- typescript
+        'class_declaration',
+        'method_definition',
+        'arrow_function',
+        'function_declaration',
+        'generator_function_declaration',
+      }
+    end,
+  },
+  {
+    {
+      'tadaa/vimade',
+      -- default opts (you can partially set these or configure them however you like)
+      opts = {
+        -- Recipe can be any of 'default', 'minimalist', 'duo', and 'ripple'
+        -- Set animate = true to enable animations on any recipe.
+        -- See the docs for other config options.
+        recipe = { 'default', { animate = false } },
+        -- ncmode = 'windows' will fade inactive windows.
+        -- ncmode = 'focus' will only fade after you activate the `:VimadeFocus` command.
+        ncmode = 'buffers',
+        fadelevel = 0.4, -- any value between 0 and 1. 0 is hidden and 1 is opaque.
+        -- Changes the real or theoretical background color. basebg can be used to give
+        -- transparent terminals accurating dimming.  See the 'Preparing a transparent terminal'
+        -- section in the README.md for more info.
+        -- basebg = [23,23,23],
+        basebg = '',
+        tint = {
+          -- bg = {rgb={0,0,0}, intensity=0.3}, -- adds 30% black to background
+          -- fg = {rgb={0,0,255}, intensity=0.3}, -- adds 30% blue to foreground
+          -- fg = {rgb={120,120,120}, intensity=1}, -- all text will be gray
+          -- sp = {rgb={255,0,0}, intensity=0.5}, -- adds 50% red to special characters
+          -- you can also use functions for tint or any value part in the tint object
+          -- to create window-specific configurations
+          -- see the `Tinting` section of the README for more details.
+        },
+        -- prevent a window or buffer from being styled. You
+        blocklist = {
+          default = {
+            highlights = {
+              laststatus_3 = function(win, active)
+                -- Global statusline, laststatus=3, is currently disabled as multiple windows take
+                -- ownership of the StatusLine highlight (see #85).
+                if vim.go.laststatus == 3 then
+                  -- you can also return tables (e.g. {'StatusLine', 'StatusLineNC'})
+                  return 'StatusLine'
+                end
+              end,
+              -- Prevent ActiveTabs from highlighting.
+              'TabLineSel',
+              'Pmenu',
+              'PmenuSel',
+              'PmenuKind',
+              'PmenuKindSel',
+              'PmenuExtra',
+              'PmenuExtraSel',
+              'PmenuSbar',
+              'PmenuThumb',
+              -- Lua patterns are supported, just put the text between / symbols:
+              -- '/^StatusLine.*/' -- will match any highlight starting with "StatusLine"
+            },
+            buf_opts = { buftype = { 'prompt' } },
+            -- buf_name = {'name1','name2', name3'},
+            -- buf_vars = { variable = {'match1', 'match2'} },
+            -- win_opts = { option = {'match1', 'match2' } },
+            -- win_vars = { variable = {'match1', 'match2'} },
+            -- win_type = {'name1','name2', name3'},
+            -- win_config = { variable = {'match1', 'match2'} },
+          },
+          default_block_floats = function(win, active)
+            return win.win_config.relative ~= '' and (win ~= active or win.buf_opts.buftype == 'terminal') and true or false
+          end,
+          -- any_rule_name1 = {
+          --   buf_opts = {}
+          -- },
+          -- only_behind_float_windows = {
+          --   buf_opts = function(win, current)
+          --     if (win.win_config.relative == '')
+          --       and (current and current.win_config.relative ~= '') then
+          --         return false
+          --     end
+          --     return true
+          --   end
+          -- },
+        },
+        -- Link connects windows so that they style or unstyle together.
+        -- Properties are matched against the active window. Same format as blocklist above
+        link = {},
+        groupdiff = true, -- links diffs so that they style together
+        groupscrollbind = false, -- link scrollbound windows so that they style together.
+        -- enable to bind to FocusGained and FocusLost events. This allows fading inactive
+        -- tmux panes.
+        enablefocusfading = false,
+        -- Time in milliseconds before re-checking windows. This is only used when usecursorhold
+        -- is set to false.
+        checkinterval = 1000,
+        -- enables cursorhold event instead of using an async timer.  This may make Vimade
+        -- feel more performant in some scenarios. See h:updatetime.
+        usecursorhold = false,
+        -- when nohlcheck is disabled the highlight tree will always be recomputed. You may
+        -- want to disable this if you have a plugin that creates dynamic highlights in
+        -- inactive windows. 99% of the time you shouldn't need to change this value.
+        nohlcheck = true,
+        focus = {
+          providers = {
+            filetypes = {
+              default = {
+                -- If you use mini.indentscope, snacks.indent, or hlchunk, you can also highlight
+                -- using the same indent scope!
+                -- {'snacks', {}},
+                -- {'mini', {}},
+                -- {'hlchunk', {}},
+                {
+                  'treesitter',
+                  {
+                    min_node_size = 2,
+                    min_size = 1,
+                    max_size = 0,
+                    -- exclude types either too large and/or mundane
+                    exclude = {
+                      'script_file',
+                      'stream',
+                      'document',
+                      'source_file',
+                      'translation_unit',
+                      'chunk',
+                      'module',
+                      'stylesheet',
+                      'statement_block',
+                      'block',
+                      'pair',
+                      'program',
+                      'switch_case',
+                      'catch_clause',
+                      'finally_clause',
+                      'property_signature',
+                      'dictionary',
+                      'assignment',
+                      'expression_statement',
+                      'compound_statement',
+                    },
+                  },
+                },
+                -- if treesitter fails or there isn't a good match, fallback to blanks
+                -- (similar to limelight)
+                { 'blanks', {
+                  min_size = 1,
+                  max_size = '35%',
+                } },
+                -- if blanks fails to find a good match, fallback to static 35%
+                { 'static', {
+                  size = '35%',
+                } },
+              },
+              -- You can make custom configurations for any filetype.  Here are some examples.
+              -- markdown ={{'blanks', {min_size=0, max_size='50%'}}, {'static', {max_size='50%'}}}
+              -- javascript = {
+              -- -- only use treesitter (no fallbacks)
+              --   {'treesitter', { min_node_size = 2, include = {'if_statement', ...}}},
+              -- },
+              -- typescript = {
+              --   {'treesitter', { min_node_size = 2, exclude = {'if_statement'}}},
+              --   {'static', {size = '35%'}}
+              -- },
+              -- java = {
+              -- -- mini with a fallback to blanks
+              -- {'mini', {min_size = 1, max_size = 20}},
+              -- {'blanks', {min_size = 1, max_size = '100%' }},
+              -- },
+            },
+          },
+        },
+      },
+    },
+  },
+  -- lazy
+  {
+    'sontungexpt/witch',
+    priority = 1000,
+    lazy = false,
+    config = function(_, opts)
+      require('witch').setup(opts)
+    end,
+  },
+  {
+    'ya2s/nvim-cursorline',
+    config = function()
+      require('nvim-cursorline').setup {
+        cursorline = {
+          enable = true,
+          timeout = 1000,
+          number = false,
+        },
+        cursorword = {
+          enable = true,
+          min_length = 3,
+          hl = { underline = true },
+        },
+      }
+    end,
+  },
+  {
+    'romgrk/barbar.nvim',
+    dependencies = {
+      'lewis6991/gitsigns.nvim', -- OPTIONAL: for git status
+      'nvim-tree/nvim-web-devicons', -- OPTIONAL: for file icons
+    },
+    init = function()
+      vim.g.barbar_auto_setup = false
+    end,
+    opts = {
+      -- lazy.nvim will automatically call setup for you. put your options here, anything missing will use the default:
+      -- animation = true,
+      -- insert_at_start = true,
+      -- …etc.
+    },
+    version = '^1.0.0', -- optional: only update when a new 1.x version is released
+  },
+  {
+    'pandasoli/nekovim',
+  },
+  {
+    'gaborvecsei/usage-tracker.nvim',
+    config = function()
+      require('usage-tracker').setup {
+        keep_eventlog_days = 14,
+        cleanup_freq_days = 7,
+        event_wait_period_in_sec = 5,
+        inactivity_threshold_in_min = 5,
+        inactivity_check_freq_in_sec = 5,
+        verbose = 0,
+        telemetry_endpoint = '', -- you'll need to start the restapi for this feature
+      }
+    end,
+  },
+  --  {
+  --    'Civitasv/cmake-tools.nvim',
+  --    config = function()
+  --      require('cmake-tools').setup {
+  --        cmake_command = 'cmake', -- this is used to specify cmake command path
+  --        ctest_command = 'ctest', -- this is used to specify ctest command path
+  --        cmake_use_preset = true,
+  --        cmake_regenerate_on_save = true, -- auto generate when save CMakeLists.txt
+  --        cmake_generate_options = { '-DCMAKE_EXPORT_COMPILE_COMMANDS=1' }, -- this will be passed when invoke `CMakeGenerate`
+  --        cmake_build_options = {}, -- this will be passed when invoke `CMakeBuild`
+  --        -- support macro expansion:
+  --        --       ${kit}
+  --        --       ${kitGenerator}
+  --        --       ${variant:xx}
+  --        cmake_build_directory = function()
+  --          if osys.iswin32 then
+  --            return 'out\\${variant:buildType}'
+  --          end
+  --          return 'out/${variant:buildType}'
+  --        end, -- this is used to specify generate directory for cmake, allows macro expansion, can be a string or a function returning the string, relative to cwd.
+  --        cmake_compile_commands_options = {
+  --          action = 'soft_link', -- available options: soft_link, copy, lsp, none
+  --          -- soft_link: this will automatically make a soft link from compile commands file to target
+  --          -- copy:      this will automatically copy compile commands file to target
+  --          -- lsp:       this will automatically set compile commands file location using lsp
+  --          -- none:      this will make this option ignored
+  --          target = vim.loop.cwd(), -- path to directory, this is used only if action == "soft_link" or action == "copy"
+  --        },
+  --        cmake_kits_path = nil, -- this is used to specify global cmake kits path, see CMakeKits for detailed usage
+  --        cmake_variants_message = {
+  --          short = { show = true }, -- whether to show short message
+  --          long = { show = true, max_length = 40 }, -- whether to show long message
+  --        },
+  --        cmake_dap_configuration = { -- debug settings for cmake
+  --          name = 'cpp',
+  --          type = 'codelldb',
+  --          request = 'launch',
+  --          stopOnEntry = false,
+  --          runInTerminal = true,
+  --          console = 'integratedTerminal',
+  --        },
+  --        cmake_executor = { -- executor to use
+  --          name = 'quickfix', -- name of the executor
+  --          opts = {}, -- the options the executor will get, possible values depend on the executor type. See `default_opts` for possible values.
+  --          default_opts = { -- a list of default and possible values for executors
+  --            quickfix = {
+  --              show = 'always', -- "always", "only_on_error"
+  --              position = 'belowright', -- "vertical", "horizontal", "leftabove", "aboveleft", "rightbelow", "belowright", "topleft", "botright", use `:h vertical` for example to see help on them@--A
+  --              size = 10,
+  --              encoding = 'utf-8', -- if encoding is not "utf-8", it will be converted to "utf-8" using `vim.fn.iconv`
+  --              auto_close_when_success = true, -- typically, you can use it with the "always" option; it will auto-close the quickfix buffer if the execution is successful.
+  --            },
+  --            toggleterm = {
+  --              direction = 'float', -- 'vertical' | 'horizontal' | 'tab' | 'float'
+  --              close_on_exit = false, -- whether close the terminal when exit
+  --              auto_scroll = true, -- whether auto scroll to the bottom
+  --              singleton = true, -- single instance, autocloses the opened one, if present
+  --            },
+  --            overseer = {
+  --              new_task_opts = {
+  --                strategy = {
+  --                  'toggleterm',
+  --                  direction = 'horizontal',
+  --                  auto_scroll = true,
+  --                  quit_on_exit = 'success',
+  --                },
+  --              }, -- options to pass into the `overseer.new_task` command
+  --              on_new_task = function(task)
+  --                require('overseer').open { enter = false, direction = 'right' }
+  --              end, -- a function that gets overseer.Task when it is created, before calling `task:start`
+  --            },
+  --            terminal = {
+  --              name = 'Main Terminal',
+  --              prefix_name = '[CMakeTools]: ', -- This must be included and must be unique, otherwise the terminals will not work. Do not use a simple spacebar " ", or any generic name
+  --              split_direction = 'horizontal', -- "horizontal", "vertical"
+  --              split_size = 11,
+  --
+  --              -- Window handling
+  --              single_terminal_per_instance = true, -- Single viewport, multiple windows
+  --              single_terminal_per_tab = true, -- Single viewport per tab
+  --              keep_terminal_static_location = true, -- Static location of the viewport if avialable
+  --              auto_resize = true, -- Resize the terminal if it already exists
+  --
+  --              -- Running Tasks
+  --              start_insert = false, -- If you want to enter terminal with :startinsert upon using :CMakeRun
+  --              focus = false, -- Focus on terminal when cmake task is launched.
+  --              do_not_add_newline = false, -- Do not hit enter on the command inserted when using :CMakeRun, allowing a chance to review or modify the command before hitting enter.
+  --            }, -- terminal executor uses the values in cmake_terminal
+  --          },
+  --        },
+  --        cmake_runner = { -- runner to use
+  --          name = 'terminal', -- name of the runner
+  --          opts = {}, -- the options the runner will get, possible values depend on the runner type. See `default_opts` for possible values.
+  --          default_opts = { -- a list of default and possible values for runners
+  --            quickfix = {
+  --              show = 'always', -- "always", "only_on_error"
+  --              position = 'belowright', -- "bottom", "top"
+  --              size = 10,
+  --              encoding = 'utf-8',
+  --              auto_close_when_success = true, -- typically, you can use it with the "always" option; it will auto-close the quickfix buffer if the execution is successful.
+  --            },
+  --            toggleterm = {
+  --              direction = 'float', -- 'vertical' | 'horizontal' | 'tab' | 'float'
+  --              close_on_exit = false, -- whether close the terminal when exit
+  --              auto_scroll = true, -- whether auto scroll to the bottom
+  --              singleton = true, -- single instance, autocloses the opened one, if present
+  --            },
+  --            overseer = {
+  --              new_task_opts = {
+  --                strategy = {
+  --                  'toggleterm',
+  --                  direction = 'horizontal',
+  --                  autos_croll = true,
+  --                  quit_on_exit = 'success',
+  --                },
+  --              }, -- options to pass into the `overseer.new_task` command
+  --              on_new_task = function(task) end, -- a function that gets overseer.Task when it is created, before calling `task:start`
+  --            },
+  --            terminal = {
+  --              name = 'Main Terminal',
+  --              prefix_name = '[CMakeTools]: ', -- This must be included and must be unique, otherwise the terminals will not work. Do not use a simple spacebar " ", or any generic name
+  --              split_direction = 'horizontal', -- "horizontal", "vertical"
+  --              split_size = 11,
+  --
+  --              -- Window handling
+  --              single_terminal_per_instance = true, -- Single viewport, multiple windows
+  --              single_terminal_per_tab = true, -- Single viewport per tab
+  --              keep_terminal_static_location = true, -- Static location of the viewport if avialable
+  --              auto_resize = true, -- Resize the terminal if it already exists
+  --
+  --              -- Running Tasks
+  --              start_insert = false, -- If you want to enter terminal with :startinsert upon using :CMakeRun
+  --              focus = false, -- Focus on terminal when cmake task is launched.
+  --              do_not_add_newline = false, -- Do not hit enter on the command inserted when using :CMakeRun, allowing a chance to review or modify the command before hitting enter.
+  --            },
+  --          },
+  --        },
+  --        cmake_notifications = {
+  --          runner = { enabled = true },
+  --          executor = { enabled = true },
+  --          spinner = { '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' }, -- icons used for progress display
+  --          refresh_rate_ms = 100, -- how often to iterate icons
+  --        },
+  --        cmake_virtual_text_support = true, -- Show the target related to current file using virtual text (at right corner)
+  --        cmake_use_scratch_buffer = false, -- A buffer that shows what cmake-tools has done
+  --      }
+  --    end,
+  --  },
   { 'lukas-reineke/lsp-format.nvim', opts = {} },
   -- NOTE: Plugins can specify dependencies.
   --
@@ -417,6 +809,9 @@ require('lazy').setup({
           ['ui-select'] = {
             require('telescope.themes').get_dropdown(),
           },
+          --['bibtex'] = {
+          --require 'telescope-bibtex',
+          --},
         },
       }
 
@@ -461,7 +856,74 @@ require('lazy').setup({
       end, { desc = '[S]earch [N]eovim files' })
     end,
   },
+  {
+    'ta-tikoma/php.easy.nvim',
+    config = true,
+    keys = {
+      { '-#', '<CMD>PHPEasyAttribute<CR>', ft = 'php' },
+      { '-b', '<CMD>PHPEasyDocBlock<CR>', ft = 'php' },
+      { '-r', '<CMD>PHPEasyReplica<CR>', ft = 'php' },
+      { '-c', '<CMD>PHPEasyCopy<CR>', ft = 'php' },
+      { '-d', '<CMD>PHPEasyDelete<CR>', ft = 'php' },
+      { '-uu', '<CMD>PHPEasyRemoveUnusedUses<CR>', ft = 'php' },
+      { '-e', '<CMD>PHPEasyExtends<CR>', ft = 'php' },
+      { '-i', '<CMD>PHPEasyImplements<CR>', ft = 'php' },
+      { '--i', '<CMD>PHPEasyInitInterface<CR>', ft = 'php' },
+      { '--c', '<CMD>PHPEasyInitClass<CR>', ft = 'php' },
+      { '--ac', '<CMD>PHPEasyInitAbstractClass<CR>', ft = 'php' },
+      { '--t', '<CMD>PHPEasyInitTrait<CR>', ft = 'php' },
+      { '--e', '<CMD>PHPEasyInitEnum<CR>', ft = 'php' },
+      { '-c', '<CMD>PHPEasyAppendConstant<CR>', ft = 'php', mode = { 'n', 'v' } },
+      { '-p', '<CMD>PHPEasyAppendProperty<CR>', ft = 'php', mode = { 'n', 'v' } },
+      { '-m', '<CMD>PHPEasyAppendMethod<CR>', ft = 'php', mode = { 'n', 'v' } },
+      { '__', '<CMD>PHPEasyAppendConstruct<CR>', ft = 'php' },
+      { '_i', '<CMD>PHPEasyAppendInvoke<CR>', ft = 'php' },
+      { '-a', '<CMD>PHPEasyAppendArgument<CR>', ft = 'php' },
+    },
+  },
+  {
+    'neovim/nvim-lspconfig', -- REQUIRED: for native Neovim LSP integration
+    lazy = false, -- REQUIRED: tell lazy.nvim to start this plugin at startup
+    dependencies = {
+      -- main one
+      { 'ms-jpq/coq_nvim', branch = 'coq' },
 
+      -- 9000+ Snippets
+      { 'ms-jpq/coq.artifacts', branch = 'artifacts' },
+
+      -- lua & third party sources -- See https://github.com/ms-jpq/coq.thirdparty
+      -- Need to **configure separately**
+      { 'ms-jpq/coq.thirdparty', branch = '3p' },
+      -- - shell repl
+      -- - nvim lua api
+      -- - scientific calculator
+      -- - comment banner
+      -- - etc
+    },
+    init = function()
+      vim.g.coq_settings = {
+        auto_start = true, -- if you want to start COQ at startup
+        -- Your COQ settings here
+      }
+    end,
+    config = function()
+      -- Your LSP settings here
+    end,
+  },
+  {
+    'gennaro-tedesco/nvim-jqx',
+    event = { 'BufReadPost' },
+    ft = { 'json', 'yaml' },
+  },
+  --{
+  --'MeanderingProgrammer/render-markdown.nvim',
+  --dependencies = { 'nvim-treesitter/nvim-treesitter', 'echasnovski/mini.nvim' }, -- if you use the mini.nvim suite
+  -- dependencies = { 'nvim-treesitter/nvim-treesitter', 'echasnovski/mini.icons' }, -- if you use standalone mini plugins
+  --dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
+  ---@module 'render-markdown'
+  ---@type render.md.UserConfig
+  --opts = {},
+  --},
   -- LSP Plugins
   {
     -- `lazydev` configures Lua LSP for your Neovim config, runtime and plugins
