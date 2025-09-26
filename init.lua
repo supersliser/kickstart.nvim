@@ -551,7 +551,7 @@ require('lazy').setup({
         'stevearc/dressing.nvim', -- optional for vim.ui.select
     },
     config = true,
-}
+},
   {
     'ya2s/nvim-cursorline',
     config = function()
